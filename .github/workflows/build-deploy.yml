@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
 
 jobs:
   build:
@@ -24,6 +21,12 @@ jobs:
 
       - name: Install NPM packages
         run: npm install
+
+      - name: Install Eslint
+      - run: npm install eslint
+
+      - name: run Eslint
+        run: npx eslint src
 
       - name: Build project
         run: npm run build
