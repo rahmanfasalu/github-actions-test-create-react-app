@@ -20,13 +20,13 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: 13.x
+          node-version: 15.x
 
       - name: Install NPM packages
-        run: npm ci
+        run: npm install
 
       - name: Build project
         run: npm run build
 
       - name: Run tests and produce reports
-        run: npm run test:ci
+        run: npm run test
