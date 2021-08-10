@@ -15,7 +15,7 @@ name: Lint Code Base
 #############################
 on:
   push:
-    # branches-ignore: [master]
+    branches-ignore: [master]
     # Remove the line above to run when pushing to master
   pull_request:
     branches: [master]
@@ -24,7 +24,7 @@ on:
 # Set the Job #
 ###############
 jobs:
-  lint:
+  build:
     # Name the Job
     name: Lint Code Base
     # Set the agent to run on
