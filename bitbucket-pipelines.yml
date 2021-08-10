@@ -1,0 +1,90 @@
+image: "node:14.15.1-alpine3.12"
+pipelines:
+  default:
+    - parallel:
+        - step:
+            name: Build and Test
+            caches:
+              - node
+            script:
+              - npm install
+        - step:
+            name: Lint the node package
+            script:
+              - npm install eslint
+              - npx eslint src
+            caches:
+              - node
+  branches:
+    master:
+      - parallel:
+          - step:
+              name: Build and Test
+              caches:
+                - node
+              script:
+                - npm install
+                - unset CI
+                - npm run build
+              artifacts:
+                - build/**
+          - step:
+              name: Security Scan
+              script:
+                - pipe: "atlassian/git-secrets-scan:0.4.3"
+      - parallel:
+          - step:
+              name: Uploading Artifact
+              image: amazon/aws-cli
+              script:
+                - echo "Artifact upload started"
+                - yum install -y zip jq
+                - >-
+                  export LABEL="`jq -r .name
+                  package.json`"-"$(date +%Y"-"%m"-"%d)"-"${BITBUCKET_COMMIT}-`jq -r .version
+                  package.json`"
+                - zip $(echo "$LABEL").zip build/
+                - >-
+                  aws s3 cp $(echo "$LABEL").zip
+                  s3://somnofy-build-artifacts/somnofy-webapp/$(echo
+                  "$LABEL").zip
+                - echo "Artifact upload completed"
+          - step:
+              name: Deploying to Staging
+              deployment: Staging
+              clone:
+                enabled: false
+              script:
+                - pipe: "atlassian/aws-s3-deploy:0.4.4"
+                  variables:
+                    AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+                    AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+                    AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+                    S3_BUCKET: stage.app.somnofy.com
+                    LOCAL_PATH: build
+                - pipe: "atlassian/aws-cloudfront-invalidate:0.1.1"
+                  variables:
+                    AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+                    AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+                    AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+                    DISTRIBUTION_ID: E2UWYQADZ1VATK
+      - step:
+          name: Deploying to Production
+          deployment: Production
+          trigger: manual
+          clone:
+            enabled: false
+          script:
+            - pipe: "atlassian/aws-s3-deploy:0.4.4"
+              variables:
+                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+                AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+                S3_BUCKET: app.somnofy.com
+                LOCAL_PATH: build
+            - pipe: "atlassian/aws-cloudfront-invalidate:0.1.1"
+              variables:
+                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+                AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+                DISTRIBUTION_ID: E2UWYQADZ1VATK
