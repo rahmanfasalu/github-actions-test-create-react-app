@@ -45,7 +45,6 @@ jobs:
 
   test:
     name: Test
-    needs: install
     runs-on: ubuntu-latest
 
     steps:
