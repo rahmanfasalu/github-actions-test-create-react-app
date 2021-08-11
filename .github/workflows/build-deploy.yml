@@ -5,11 +5,10 @@ on:
     branches: [master]
       
 jobs:
-  install:
-    name: Install Packages
+  build:
+    name: Build
     runs-on: ubuntu-latest
 
-    
     steps:
       - name: Cache node modules
         uses: actions/cache@v2
@@ -34,25 +33,33 @@ jobs:
 
       - name: Install NPM packages
         run: npm install
-      
+       
+      - name: Build project
+        run: npm run build
+        
+      - name: Upload production-ready build files
+        uses: actions/upload-artifact@v2
+        with:
+          name: production-files
+          path: ./build
+
       # - name: Unset CI
       #   run: unset CI
 
   test:
-    name: Testing and coverage report
+    name: Test
     needs: install
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: ~/.npm
       
+      - name: Install NPM packages
+        run: npm install
+
       - name: Run tests and produce reports
         run: npm run test
-        
 
       - name: Publish test results
         uses: IgnusG/jest-report-action@v2.3.3
@@ -65,27 +72,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           lcov-file: ./coverage/lcov.info
-
-  build:
-    name: Build
-    needs: install
-    runs-on: ubuntu-latest
-  
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: ~/.npm
-
-      - name: Build project
-        run: npm run build
-        
-      - name: Upload production-ready build files
-        uses: actions/upload-artifact@v2
-        with:
-          name: production-files
-          path: ./build
 
   Download:
     name: Download artifacts
