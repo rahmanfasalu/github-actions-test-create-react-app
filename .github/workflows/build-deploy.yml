@@ -46,12 +46,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
-      - name: Run tests and produce reports
-        run: npm run test
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
+      
+      - name: Run tests and produce reports
+        run: npm run test
+        
 
       - name: Publish test results
         uses: IgnusG/jest-report-action@v2.3.3
@@ -73,13 +74,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Build project
-        run: npm run build
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
 
+      - name: Build project
+        run: npm run build
+        
       - name: Upload production-ready build files
         uses: actions/upload-artifact@v2
         with:
