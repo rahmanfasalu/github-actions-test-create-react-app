@@ -25,7 +25,7 @@ jobs:
         run: unset CI
 
   test:
-    name: Install Packages
+    name: Testing and coverage report
     needs: install
     runs-on: ubuntu-latest
 
@@ -52,6 +52,7 @@ jobs:
     name: Build
     needs: install
     runs-on: ubuntu-latest
+    
 
     steps:
       - name: Checkout code
@@ -59,6 +60,9 @@ jobs:
 
       - name: Build project
         run: npm run build
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
 
       - name: Upload production-ready build files
         uses: actions/upload-artifact@v2
