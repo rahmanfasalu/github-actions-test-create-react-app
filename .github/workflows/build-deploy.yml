@@ -181,11 +181,11 @@ jobs:
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
       - name: Get project name
-        run: echo '::set-output name=PROJECT_NAME::`jq -r .name package.json`'
+        run: echo '::set-output name=PROJECT_NAME::jq -r .name package.json'
         id: project_name 
         
       - name: Get package version
-        run: echo '::set-output name=PROJECT_VERSION::`jq -r .version package.json`'
+        run: echo '::set-output name=PROJECT_VERSION::jq -r .version package.json'
         id: project_version 
 
       - name: Set artifacts name
@@ -198,6 +198,11 @@ jobs:
           echo "PROJECT_NAME: ${{ steps.project_name.outputs.PROJECT_NAME }}"
           echo "ARTIFACTS_NAME: sm-${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
 
+      - name: Upload production-ready build files
+        uses: actions/upload-artifact@v2
+        with:
+          name: sm-${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}
+          path: ./build
   # test:
   #   name: Test
   #   needs: build
@@ -232,11 +237,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     
     steps:
-      - name: Upload production-ready build files
-        uses: actions/upload-artifact@v2
-        with:
-          name: sm-${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}
-          path: ./build
+      
 
       - name: Download artifact
         uses: actions/download-artifact@v2
