@@ -243,8 +243,8 @@ jobs:
       - name: Copy files to the production website with the AWS CLI
         run: |
           echo "Artifact upload started"
+          echo "${{ $GITHUB_ENV }}"
           run: echo "NOW::$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
-          echo "NOW: ${{ NOW }}"
           echo "Sha: ${{ steps.vars.outputs.sha_short }}"
           run: echo "LABEL::$(`jq -r .name package.json`"-"$(date +%Y"-"%m"-"%d)"-"${{steps.vars.outputs.sha_shor}}-`jq -r .version package.json`)" >> $GITHUB_ENV
           echo $LABEL
