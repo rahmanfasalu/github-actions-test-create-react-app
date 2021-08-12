@@ -195,7 +195,7 @@ jobs:
       - name: Upload production-ready build files
         uses: actions/upload-artifact@v2
         with:
-          name: production-files
+          name: echo "${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}""
           path: ./build
 
   test:
@@ -235,7 +235,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v2
         with:
-          name: production-files
+          name: echo "${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}""
           path: ./build
 
   configure:
@@ -280,7 +280,7 @@ jobs:
         - name: Download artifact
           uses: actions/download-artifact@v2
           with:
-            name: ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}
+            name: echo "${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}""
             path: ./build
 
         - name: Archive build
