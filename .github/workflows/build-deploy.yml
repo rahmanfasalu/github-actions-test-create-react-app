@@ -172,11 +172,14 @@ jobs:
       - name: Build project
         run: npm run build
       
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
       - name: Upload production-ready build files
         uses: actions/upload-artifact@v2
         with:
-          name: asset-package-${{ env.VERSION }}
+          name: asset-package-${{ steps.date.outputs.date }}
           path: ./build
 
   # test:
@@ -206,18 +209,18 @@ jobs:
   #         github-token: ${{ secrets.GITHUB_TOKEN }}
   #         lcov-file: ./coverage/lcov.info
         
-  Download:
-    name: Download artifacts
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+  # Download:
+  #   name: Download artifacts
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/master'
     
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: productions-files$ {{ env.VERSION }}
-          path: ./build
+  #   steps:
+  #     - name: Download artifact
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: productions-files$ {{ env.VERSION }}
+  #         path: ./build
 
   configure:
       name: Configure AWS
@@ -259,7 +262,6 @@ jobs:
           run: |
             echo "Artifact upload started"
             echo "Artifacts name: ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
-            7z a -tzip ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}.zip ./build
             echo "Artifact completed"
 
       
