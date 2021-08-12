@@ -238,9 +238,6 @@ jobs:
           id: vars
           run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
-        - name: Check outputs
-          run: echo ${{ steps.vars.outputs.sha_short }}
-
         - name: Get current date
           id: date
           run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
@@ -254,15 +251,12 @@ jobs:
           id: project_version 
 
         - name: Set artifacts name
-          run:  echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}'
+          run: echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}-${{steps.vars.outputs.sha_short}}-${{ steps.project_version.outputs.PROJECT_VERSION }}'
           id: artifacts_name 
 
         - name: Copy files to the production website with the AWS CLI
           run: |
             echo "Artifact upload started"
-            echo "Date: ${{ steps.date.outputs.date }}"
-            echo "Sha: ${{ steps.vars.outputs.sha_short }}"
-            echo "Project name: ${{ steps.project_name.outputs.PROJECT_NAME }}"
             echo "Artifacts name: ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
           
   
