@@ -254,7 +254,7 @@ jobs:
           id: project_version 
 
         - name: Set artifacts name
-          run:  echo '::set-output name=ARTIFACTS_NAME::`steps.project_name.outputs.PROJECT_NAME+'-'+steps.date.outputs.date`'
+          run:  echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}'
           id: artifacts_name 
 
         - name: Copy files to the production website with the AWS CLI
