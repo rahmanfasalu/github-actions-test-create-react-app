@@ -172,14 +172,33 @@ jobs:
       - name: Build project
         run: npm run build
       
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
+      - name: Get project name
+        run: echo '::set-output name=PROJECT_NAME::`jq -r .name package.json`'
+        id: project_name 
+        
+      - name: Get package version
+        run: echo '::set-output name=PROJECT_VERSION::`jq -r .version package.json`'
+        id: project_version 
+
+      - name: Set artifacts name
+        run: echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}-${{steps.vars.outputs.sha_short}}-${{steps.project_version.outputs.PROJECT_VERSION}}'
+        id: artifacts_name 
+
+      # - name: print artifacts name
+      #   run: echo "Artifacts name- ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
+
       - name: Upload production-ready build files
         uses: actions/upload-artifact@v2
         with:
-          name: asset-package-${{ steps.date.outputs.date }}
+          name: sm-${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}
           path: ./build
 
   # test:
@@ -222,47 +241,47 @@ jobs:
   #         name: productions-files$ {{ env.VERSION }}
   #         path: ./build
 
-  configure:
-      name: Configure AWS
-      needs: build
-      runs-on: ubuntu-latest
+  # configure:
+  #     name: Configure AWS
+  #     needs: build
+  #     runs-on: ubuntu-latest
       
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v2
+  #     steps:
+  #       - name: Checkout
+  #         uses: actions/checkout@v2
 
-        # - name: Configure AWS credentials for stage build
-        #   uses: aws-actions/configure-aws-credentials@v1
-        #   with:
-        #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        #     aws-region: eu-west-1
+  #       # - name: Configure AWS credentials for stage build
+  #       #   uses: aws-actions/configure-aws-credentials@v1
+  #       #   with:
+  #       #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #       #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #       #     aws-region: eu-west-1
 
-        - name: Set outputs
-          id: vars
-          run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+  #       - name: Set outputs
+  #         id: vars
+  #         run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
-        - name: Get current date
-          id: date
-          run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+  #       - name: Get current date
+  #         id: date
+  #         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
-        - name: Get project name
-          run: echo '::set-output name=PROJECT_NAME::`jq -r .name package.json`'
-          id: project_name 
+  #       - name: Get project name
+  #         run: echo '::set-output name=PROJECT_NAME::`jq -r .name package.json`'
+  #         id: project_name 
         
-        - name: Get package version
-          run: echo '::set-output name=PROJECT_VERSION::`jq -r .version package.json`'
-          id: project_version 
+  #       - name: Get package version
+  #         run: echo '::set-output name=PROJECT_VERSION::`jq -r .version package.json`'
+  #         id: project_version 
 
-        - name: Set artifacts name
-          run: echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}-${{steps.vars.outputs.sha_short}}-${{steps.project_version.outputs.PROJECT_VERSION}}'
-          id: artifacts_name 
+  #       - name: Set artifacts name
+  #         run: echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}-${{steps.vars.outputs.sha_short}}-${{steps.project_version.outputs.PROJECT_VERSION}}'
+  #         id: artifacts_name 
 
-        - name: Archive build
-          run: |
-            echo "Artifact upload started"
-            echo "Artifacts name: ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
-            echo "Artifact completed"
+  #       - name: Archive build
+  #         run: |
+  #           echo "Artifact upload started"
+  #           echo "Artifacts name: ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
+  #           echo "Artifact completed"
 
       
           
