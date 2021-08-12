@@ -195,7 +195,7 @@ jobs:
       - name: Show version number
         run: echo "Version is ${{ steps.package-version.outputs.version }}"
 
-        
+
       - name: Set artifacts name
         run: echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}-${{steps.vars.outputs.sha_short}}-${{steps.project_version.outputs.PROJECT_VERSION}}'
         id: artifacts_name 
@@ -209,7 +209,7 @@ jobs:
       - name: Upload production-ready build files
         uses: actions/upload-artifact@v2
         with:
-          name: sm-`jq -r .name package.json`
+          name: sm-${{ steps.package-version.outputs.version }}
           path: ./build
   # test:
   #   name: Test
