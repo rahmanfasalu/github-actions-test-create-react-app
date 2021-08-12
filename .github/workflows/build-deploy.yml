@@ -185,7 +185,7 @@ jobs:
         id: project_name 
         
       - name: Get package version
-        run: echo '::set-output name=PROJECT_VERSION::jq -r .version package.json'
+        run: echo '::set-output name=PROJECT_VERSION::$(jq -r .version package.json)'
         id: project_version 
 
       - name: Set artifacts name
@@ -198,11 +198,11 @@ jobs:
           echo "PROJECT_NAME: ${{ steps.project_name.outputs.PROJECT_NAME }}"
           echo "ARTIFACTS_NAME: sm-${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
 
-      # - name: Upload production-ready build files
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: sm-${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}
-      #     path: ./build
+      - name: Upload production-ready build files
+        uses: actions/upload-artifact@v2
+        with:
+          name: sm-${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}
+          path: ./build
   # test:
   #   name: Test
   #   needs: build
@@ -230,20 +230,20 @@ jobs:
   #         github-token: ${{ secrets.GITHUB_TOKEN }}
   #         lcov-file: ./coverage/lcov.info
         
-  Download:
-    name: Download artifacts
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+  # Download:
+  #   name: Download artifacts
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/master'
     
-    steps:
+  #   steps:
       
 
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: productions-files$ {{ env.VERSION }}
-          path: ./build
+  #     - name: Download artifact
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: productions-files$ {{ env.VERSION }}
+  #         path: ./build
 
   # configure:
   #     name: Configure AWS
