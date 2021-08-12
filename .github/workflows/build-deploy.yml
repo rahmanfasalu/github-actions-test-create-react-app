@@ -235,7 +235,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v2
         with:
-          name: echo "${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}""
+          name: ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}
           path: ./build
 
   configure:
@@ -280,7 +280,7 @@ jobs:
         - name: Download artifact
           uses: actions/download-artifact@v2
           with:
-            name: echo "${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}""
+            name: ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}
             path: ./build
 
         - name: Archive build
