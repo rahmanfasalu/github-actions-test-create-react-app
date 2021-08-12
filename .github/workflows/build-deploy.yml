@@ -187,7 +187,15 @@ jobs:
       - name: Get package version
         run: echo '::set-output name=PROJECT_VERSION::$(jq -r .version package.json)'
         id: project_version 
+      
+      - name: Read package.json
+        uses: tyankatsu0105/read-package-version-actions@v1
+        id: package-version
 
+      - name: Show version number
+        run: echo "Version is ${{ steps.package-version.outputs.version }}"
+
+        
       - name: Set artifacts name
         run: echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}-${{steps.vars.outputs.sha_short}}-${{steps.project_version.outputs.PROJECT_VERSION}}'
         id: artifacts_name 
