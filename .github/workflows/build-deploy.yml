@@ -163,14 +163,14 @@ jobs:
         with:
           node-version: 15.x
 
-      # - name: Install NPM packages
-      #   run: npm install
+      - name: Install NPM packages
+        run: npm install
       
-      # - name: unset CI
-      #   run: unset CI
+      - name: unset CI
+        run: unset CI
        
-      # - name: Build project
-      #   run: npm run build
+      - name: Build project
+        run: npm run build
       
       - name: Set outputs
         id: vars
@@ -197,15 +197,12 @@ jobs:
           echo "PROJECT_VERSION: ${{ steps.project_version.outputs.PROJECT_VERSION }}"
           echo "PROJECT_NAME: ${{ steps.project_name.outputs.PROJECT_NAME }}"
           echo "ARTIFACTS_NAME: ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
-         
-      # - name: print artifacts name
-      #   run: echo "Artifacts name- ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
 
-      # - name: Upload production-ready build files
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: sm-${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}
-      #     path: ./build
+      - name: Upload production-ready build files
+        uses: actions/upload-artifact@v2
+        with:
+          name: sm-${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}
+          path: ./build
 
   # test:
   #   name: Test
