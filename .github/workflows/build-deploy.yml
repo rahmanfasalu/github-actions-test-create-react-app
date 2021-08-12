@@ -171,7 +171,27 @@ jobs:
        
       - name: Build project
         run: npm run build
+      
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Get project name
+        run: echo '::set-output name=PROJECT_NAME::`jq -r .name package.json`'
+        id: project_name 
         
+      - name: Get package version
+        run: echo '::set-output name=PROJECT_VERSION::`jq -r .version package.json`'
+        id: project_version 
+
+      - name: Set artifacts name
+        run: echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}-${{steps.vars.outputs.sha_short}}-${{steps.project_version.outputs.PROJECT_VERSION}}'
+        id: artifacts_name 
+
       - name: Upload production-ready build files
         uses: actions/upload-artifact@v2
         with:
@@ -222,6 +242,9 @@ jobs:
       name: Configure AWS
       needs: build
       runs-on: ubuntu-latest
+      
+    
+        
 
       steps:
         - name: Checkout
@@ -254,11 +277,17 @@ jobs:
           run: echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}-${{steps.vars.outputs.sha_short}}-${{steps.project_version.outputs.PROJECT_VERSION}}'
           id: artifacts_name 
 
+        - name: Download artifact
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}
+            path: ./build
+
         - name: Archive build
           run: |
             echo "Artifact upload started"
             echo "Artifacts name: ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
-            7z a -tzip ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}.zip build\
+            7z a -tzip ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}.zip production-files
             echo "Artifact completed"
 
       
