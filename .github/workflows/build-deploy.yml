@@ -245,16 +245,23 @@ jobs:
           id: date
           run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
+        - name: Get the name
+          run: echo '::set-output name=PROJECT_NAME::echo `jq -r .name package.json`'
+          id: project_name 
+
         - name: Copy files to the production website with the AWS CLI
           run: |
             echo "Artifact upload started"
             echo "Date: ${{ steps.date.outputs.date }}"
             echo "Sha: ${{ steps.vars.outputs.sha_short }}"
-            githubjson=`cat $GITHUB_EVENT_PATH`
-            run:PRO_NAME echo `jq -r .name package.json` >> $GITHUB_ENV
-            run: echo $PRO_NAME
-
+            echo "Project name: ${{ steps.project_name.outputs.PROJECT_NAME }}"
             
+
+        # - name: Set selected color
+        #   run: echo '::set-output name=SELECTED_COLOR::green'
+        #   id: random-color-generator
+        # - name: Get color
+        #   run: echo "The selected color is ${{ steps.random-color-generator.outputs.SELECTED_COLOR }}"
           
           
     
