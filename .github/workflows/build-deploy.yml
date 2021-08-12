@@ -254,18 +254,14 @@ jobs:
           run: echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}-${{steps.vars.outputs.sha_short}}-${{steps.project_version.outputs.PROJECT_VERSION}}'
           id: artifacts_name 
 
-        - name: Copy files to the production website with the AWS CLI
+        - name: Archive build
           run: |
             echo "Artifact upload started"
             echo "Artifacts name: ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
-          
-  
+            7z a -tzip ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}.zip build\
+            echo "Artifact completed"
 
-        # - name: Set selected color
-        #   run: echo '::set-output name=SELECTED_COLOR::green'
-        #   id: random-color-generator
-        # - name: Get color
-        #   run: echo "The selected color is ${{ steps.random-color-generator.outputs.SELECTED_COLOR }}"
+      
           
           
     
