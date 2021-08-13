@@ -1,15 +1,160 @@
+# name: Build & deploy
+
+# on:
+#   push:
+#     branches: [master]
+    
+# jobs:
+#   build:
+#     name: Build
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Cache node modules
+#         uses: actions/cache@v2
+#         env:
+#           cache-name: cache-node-modules
+#         with:
+#           # npm cache files are stored in `~/.npm` on Linux/macOS
+#           path: ~/.npm
+#           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+#           restore-keys: |
+#             ${{ runner.os }}-build-${{ env.cache-name }}-
+#             ${{ runner.os }}-build-
+#             ${{ runner.os }}-
+
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Install Node.js
+#         uses: actions/setup-node@v1
+#         with:
+#           node-version: 15.x
+
+#       - name: Install NPM packages
+#         run: npm install
+       
+#       - name: Build project
+#         run: npm run build
+        
+#       - name: Upload production-ready build files
+#         uses: actions/upload-artifact@v2
+#         with:
+#           name: production-files
+#           path: ./build
+
+#   test:
+#     name: Test
+#     needs: build
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+      
+#       - name: Install NPM packages
+#         run: npm install
+
+#       - name: Run tests and produce reports
+#         run: npm run test
+
+#       - name: Publish test results
+#         uses: IgnusG/jest-report-action@v2.3.3
+#         if: always()  
+#         with:
+#           access-token: ${{ secrets.GITHUB_TOKEN }}   
+
+#       - name: Publish code coverage results
+#         uses: romeovs/lcov-reporter-action@v0.2.19
+#         with:
+#           github-token: ${{ secrets.GITHUB_TOKEN }}
+#           lcov-file: ./coverage/lcov.info
+
+#   Download:
+#     name: Download artifacts
+#     needs: build
+#     runs-on: ubuntu-latest
+#     if: github.ref == 'refs/heads/master'
+    
+#     steps:
+#       - name: Download artifact
+#         uses: actions/download-artifact@v2
+#         with:
+#           name: production-files
+#           path: ./build
+
+#   configure:
+#     name: Configure AWS
+#     needs: build
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v2
+
+#       - name: Configure AWS credentials for stage build
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: us-west-2
+
+
+#   deploy:
+#     name: Deploy
+#     needs: configure
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v2
+
+#       - name: Configure AWS credentials for stage build
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: us-west-2
+
+#     # - name: Copy files to the production website with the AWS CLI
+#     #   run: |
+#     #    aws s3 sync . s3://my-s3-prod-website-bucket
+
+
+
+
+#     #  - name: Deploy to gh-pages
+#     #   uses: peaceiris/actions-gh-pages@v3
+#     #   with:
+#     #     github_token: ${{ secrets.GITHUB_TOKEN }}
+#     #     publish_dir: ./build
+
+
 name: Build & deploy
 
 on:
   push:
-    branches: [master,main]
-      
+    branches: [master]
+    
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
 
     steps:
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -21,48 +166,143 @@ jobs:
       - name: Install NPM packages
         run: npm install
       
-      - name: Unset CI
+      - name: unset CI
         run: unset CI
-
+       
       - name: Build project
         run: npm run build
+      
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
-      - name: Run tests and produce reports
-        run: npm run test
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
-      - name: Publish test results
-        uses: IgnusG/jest-report-action@v2.3.3
-        if: always()  
-        with:
-          access-token: ${{ secrets.GITHUB_TOKEN }}   
+      - name: Get project name
+        run: echo '::set-output name=PROJECT_NAME::$(jq -r .name package.json)'
+        id: project_name 
+        
+      - name: Get package version
+        run: echo '::set-output name=PROJECT_VERSION::$(jq -r .version package.json)'
+        id: project_version 
+      
+      - name: Read package.json
+        uses: tyankatsu0105/read-package-version-actions@v1
+        id: package-version
 
-      - name: Publish code coverage results
-        uses: romeovs/lcov-reporter-action@v0.2.19
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          lcov-file: ./coverage/lcov.info
+      - name: Show version number
+        run: echo "Version is ${{ steps.package-version.outputs.version }}"
+
+
+      - name: Set artifacts name
+        run: echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}-${{steps.vars.outputs.sha_short}}-${{steps.project_version.outputs.PROJECT_VERSION}}'
+        id: artifacts_name 
+      
+      - name: Archive build
+        run: |
+          echo "PROJECT_VERSION: ${{ steps.project_version.outputs.PROJECT_VERSION }}"
+          echo "PROJECT_NAME: ${{ steps.project_name.outputs.PROJECT_NAME }}"
+          echo "ARTIFACTS_NAME: sm-${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
 
       - name: Upload production-ready build files
         uses: actions/upload-artifact@v2
         with:
-          name: production-files
+          name: sm-${{ steps.package-version.outputs.version }}
           path: ./build
+  # test:
+  #   name: Test
+  #   needs: build
+  #   runs-on: ubuntu-latest
 
-  deploy:
-    name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+      
+  #     - name: Install NPM packages
+  #       run: npm install
+
+  #     - name: Run tests and produce reports
+  #       run: npm run test
+
+  #     - name: Publish test results
+  #       uses: IgnusG/jest-report-action@v2.3.3
+  #       if: always()  
+  #       with:
+  #         access-token: ${{ secrets.GITHUB_TOKEN }}   
+
+  #     - name: Publish code coverage results
+  #       uses: romeovs/lcov-reporter-action@v0.2.19
+  #       with:
+  #         github-token: ${{ secrets.GITHUB_TOKEN }}
+  #         lcov-file: ./coverage/lcov.info
+        
+  # Download:
+  #   name: Download artifacts
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/master'
     
-    steps:
-    - name: Download artifact
-      uses: actions/download-artifact@v2
-      with:
-        name: production-files
-        path: ./build
+  #   steps:
+      
 
-    - name: Deploy to gh-pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build
+  #     - name: Download artifact
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: productions-files$ {{ env.VERSION }}
+  #         path: ./build
+
+  # configure:
+  #     name: Configure AWS
+  #     needs: build
+  #     runs-on: ubuntu-latest
+      
+  #     steps:
+  #       - name: Checkout
+  #         uses: actions/checkout@v2
+
+  #       # - name: Configure AWS credentials for stage build
+  #       #   uses: aws-actions/configure-aws-credentials@v1
+  #       #   with:
+  #       #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #       #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #       #     aws-region: eu-west-1
+
+  #       - name: Set outputs
+  #         id: vars
+  #         run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+  #       - name: Get current date
+  #         id: date
+  #         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+  #       - name: Get project name
+  #         run: echo '::set-output name=PROJECT_NAME::`jq -r .name package.json`'
+  #         id: project_name 
+        
+  #       - name: Get package version
+  #         run: echo '::set-output name=PROJECT_VERSION::`jq -r .version package.json`'
+  #         id: project_version 
+
+  #       - name: Set artifacts name
+  #         run: echo '::set-output name=ARTIFACTS_NAME::${{ steps.project_name.outputs.PROJECT_NAME}}-${{steps.date.outputs.date}}-${{steps.vars.outputs.sha_short}}-${{steps.project_version.outputs.PROJECT_VERSION}}'
+  #         id: artifacts_name 
+
+  #       - name: Archive build
+  #         run: |
+  #           echo "Artifact upload started"
+  #           echo "Artifacts name: ${{ steps.artifacts_name.outputs.ARTIFACTS_NAME }}"
+  #           echo "Artifact completed"
+
+      
+          
+          
+    
+    #  7z a -tzip $(echo "$LABEL").zip ./
+
+    #  - name: Deploy to gh-pages
+    #   uses: peaceiris/actions-gh-pages@v3
+    #   with:
+    #     github_token: ${{ secrets.GITHUB_TOKEN }}
+    #     publish_dir: ./build
